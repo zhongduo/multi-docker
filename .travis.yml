@@ -1,0 +1,22 @@
+language: generic
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t zhongduo/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true zhongduo/react-test npm test
+
+after_success:
+    - docker build -t zhongduo/multi-client ./client
+    - docker build -t zhongduo/multi-nginx ./nginx
+    - docker build -t zhongduo/multi-server ./server
+    - docker build -t zhongduo/multi-worker ./worker
+    # Take those images and push to docker hub
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin 
+    - docker push zhongduo/multi-client
+    - docker push zhongduo/multi-nginx
+    - docker push zhongduo/multi-server
+    - docker push zhongduo/multi-worker
